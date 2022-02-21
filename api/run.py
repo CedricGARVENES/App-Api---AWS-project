@@ -5,8 +5,8 @@ import pymysql
 
 # ToDo
 AWS_BUCKET_NAME = "esgi-iabd-bucket-s3"
-AWS_ACCESS_KEY = "AKIAX6GEI7F6KRDKME6R"
-AWS_SECRET_ACCESS_KEY = "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"
+AWS_ACCESS_KEY = ""
+AWS_SECRET_ACCESS_KEY = ""
 # AWS_DOMAIN = "http://esgi-iabd-bucket-s3.s3.amazonaws.com/"
 
 app = Flask(__name__)
