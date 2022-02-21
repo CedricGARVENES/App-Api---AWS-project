@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="descrption" content="Projet AWS - Application Front end Web">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/CSS_Luxery.css') }}">
+    <title>Application AWS</title>
+</head>
+<body>
+    <header>
+        <h1>Chargement des données :</h1>
+    </header>
+    <main>
+        <section class="body_section">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            {% if form.name.errors %}
+                                {{ form.name(placeholder="Name", class="is-invalid") }}
+                                {% for error in form.name.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            {% else %}
+                                {{ form.name(placeholder="Name") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {% if form.description.errors %}
+                                {{ form.description(placeholder="Description", class="is-invalid") }}
+                                {% for error in form.description.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            {% else %}
+                                {{ form.description(placeholder="Description") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {% if form.hours.errors %}
+                                {{ form.hours(placeholder="Nombre d\'heures", class="is-invalid") }}
+                                {% for error in form.hours.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            {% else %}
+                                {{ form.hours(placeholder="Nombre d\'heures") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {{ form.submitRDS() }}
+                        </div>
+                        <div class="col">
+                            {{ form.submitS3() }}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </main>
+    <footer>
+        <span>Réalisé par Cédric GARVENES</span>
+    </footer>
+</body>
+</html>
