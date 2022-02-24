@@ -4,10 +4,9 @@ import json
 import pymysql
 
 # ToDo
-AWS_BUCKET_NAME = "esgi-iabd-bucket-s3"
+AWS_BUCKET_NAME = "esgi.iabd.bucket.s3"
 AWS_ACCESS_KEY = ""
 AWS_SECRET_ACCESS_KEY = ""
-# AWS_DOMAIN = "http://esgi-iabd-bucket-s3.s3.amazonaws.com/"
 
 app = Flask(__name__)
 
@@ -21,13 +20,14 @@ def transfers():
     else:
         s3 = S3()
         s3.upload(record)
+    return "Connexion à l'API OK"
 
 
 class RDS:
     def __init__(self):
         self.rds = pymysql.connect(
             # ToDo
-            host='', # Point de terminaison
+            host='',
             db='db_aws_project',
             user='tabernaque',
             password='michmich',
@@ -36,7 +36,8 @@ class RDS:
 
     def insert_data(self, data):
         cur = self.rds.cursor()
-        cur.execute("INSERT INTO school_subjects (name, description, hours) VALUES (%s,%s,%d)", (data['name'], data['description'], data['hours']))
+        cur.execute("INSERT INTO school_subjects (name, description, hours) VALUES (%s,%s,%d)",
+                    (data['name'], data['description'], data['hours']))
         self.rds.commit()
 
 
@@ -47,8 +48,8 @@ class S3:
                                aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
     def upload(self, data):
-        body = jsonify({'name': data['name'], 'description': data['description'], 'hours': data['hours']})
-        result = self.s3.put_object(Body=body, Bucket=AWS_BUCKET_NAME, Key="monfichier.json")
+        body = json.dumps({'name': data['name'], 'description': data['description'], 'hours': data['hours']})
+        result = self.s3.put_object(Body=body, Bucket=AWS_BUCKET_NAME, Key="school_subjects.json")
         res = result.get('ResponseMetadata')
         if res.get('HTTPStatusCode') == 200:
             print('Fichier Upload')

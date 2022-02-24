@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, IntegerField
 from wtforms.validators import DataRequired, Length
 import requests
+import json
 
 app = Flask(__name__)
 
@@ -28,16 +29,16 @@ def home():
         ), 'success')
         if form.submitRDS.data:
             # ToDo
-            requests.post(url="http://XXXX:80/transfers", data={'way': 'RDS',
+            requests.post(url="http://XXXX:80/transfers", data=json.dumps({'way': 'RDS',
                                                                 'name': form.name.data,
                                                                 'description': form.description.data,
-                                                                'hours': form.hours.data})
+                                                                'hours': form.hours.data}))
         else:
             # ToDo
-            requests.post(url="http://XXXX:80/transfers", data={'way': 'S3',
+            requests.post(url="http://XXXX:80/transfers", data=json.dumps({'way': 'S3',
                                                                 'name': form.name.data,
                                                                 'description': form.description.data,
-                                                                'hours': form.hours.data})
+                                                                'hours': form.hours.data}))
         return redirect(url_for('home'))
     return render_template("AppAWS.html", form=form)
 
