@@ -1,3 +1,4 @@
+import botocore.exceptions
 from flask import Flask, request
 import boto3
 import json
@@ -7,6 +8,7 @@ import pymysql
 AWS_BUCKET_NAME = "esgi.iabd.bucket.s3"
 AWS_ACCESS_KEY = ""
 AWS_SECRET_ACCESS_KEY = ""
+AWS_BUCKET_KEY = "school_subjects.json"
 
 app = Flask(__name__)
 
@@ -14,31 +16,46 @@ app = Flask(__name__)
 @app.route("/transfers", methods=['GET', 'POST'])
 def transfers():
     record = json.loads(request.data)
-    if record['way'] == "RDS":
+    if record['way'] is "RDS":
         rds = RDS()
         rds.insert_data(record)
-    elif record['way'] == "S3":
+    elif record['way'] is "S3":
         s3 = S3()
-        s3.upload(record)
-    elif record['way'] == "RDStoS3":
+        try:
+            s3.s3.Object(Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY).load()
+        except botocore.exceptions.ClientError as e:
+            s3.upload([{'name': record['name'], 'description': record['description'], 'hours': record['hours']}])
+        else:
+            data_from_s3 = s3.s3.get_object(Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY)
+            data_to_s3 = json.loads(data_from_s3['Body'].read().decode())
+            data_to_s3[0].append({'name': record['name'], 'description': record['description'], 'hours': record['hours']})
+            s3.upload(data_to_s3)
+    elif record['way'] is "RDStoS3":
         rds = RDS()
         s3 = S3()
         cursor = rds.rds.cursor()
         cursor.execute("SELECT * FROM school_subjects")
         data_from_rds = cursor.fetchall()
-        data_to_s3 = json.loads(json.dumps(
-            {'name': data_from_rds[0]['name'],
-             'description': data_from_rds[0]['description'],
-             'hours': data_from_rds[0]['hours']}
-        ))
+        try:
+            s3.s3.Object(Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY).load()
+        except botocore.exceptions.ClientError as e:
+            data_to_s3 = [{'name': data_from_rds[0][0],
+                           'description': data_from_rds[0][1],
+                           'hours': data_from_rds[0][2]}]
+        else:
+            data_from_s3 = s3.s3.get_object(Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY)
+            data_to_s3 = json.loads(data_from_s3['Body'].read().decode())
         for row in data_from_rds[1:]:
-            data_to_s3.append(json.loads(json.dumps(
-                {'name': row['name'], 'description': row['description'], 'hours': row['hours']}
-            )))
+            data_to_s3.append({'name': row[0], 'description': row[1], 'hours': row[2]})
         s3.upload(data_to_s3)
     else:
         s3 = S3()
         rds = RDS()
+        data_from_s3 = s3.s3.get_object(Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY)
+        data_to_rds = json.loads(data_from_s3['Body'].read().decode())
+        for subject in data_to_rds:
+            rds.insert_data(subject)
+
 
     return "Connexion à l'API OK"
 
@@ -68,8 +85,7 @@ class S3:
                                aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
     def upload(self, data):
-        body = json.dumps({'name': data['name'], 'description': data['description'], 'hours': data['hours']})
-        result = self.s3.put_object(Body=body, Bucket=AWS_BUCKET_NAME, Key="school_subjects.json")
+        result = self.s3.put_object(Body=json.dumps(data), Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY)
         res = result.get('ResponseMetadata')
         if res.get('HTTPStatusCode') == 200:
             print('Fichier Upload')
