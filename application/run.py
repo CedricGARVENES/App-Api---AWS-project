@@ -16,6 +16,8 @@ class LoadDataForm(FlaskForm):
     hours = IntegerField('Nombre d\'heures', validators=[DataRequired()])
     submitRDS = SubmitField('Charger dans RDS')
     submitS3 = SubmitField('Charger dans S3')
+    submitRDStoS3 = SubmitField('Transférer de RDS à S3')
+    submitS3toRDS = SubmitField('Transférer de S3 à RDS')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -28,19 +30,24 @@ def home():
             button="RDS" if form.submitRDS.data else "S3"
         ), 'success')
         if form.submitRDS.data:
-            # ToDo
-            requests.post(url="http://XXXX:80/transfers", data=json.dumps({'way': 'RDS',
-                                                                'name': form.name.data,
-                                                                'description': form.description.data,
-                                                                'hours': form.hours.data}))
+            requests_pots(form, "RDS")
+        elif form.submitS3.data:
+            requests_pots(form, "S3")
+        elif form.submitRDStoS3.data:
+            requests_pots(form, "RDStoS3")
         else:
-            # ToDo
-            requests.post(url="http://XXXX:80/transfers", data=json.dumps({'way': 'S3',
-                                                                'name': form.name.data,
-                                                                'description': form.description.data,
-                                                                'hours': form.hours.data}))
+            requests_pots(form, "S3toRDS")
+
         return redirect(url_for('home'))
     return render_template("AppAWS.html", form=form)
+
+
+def requests_pots(form, way):
+    # ToDo
+    requests.post(url="http://XXXX:80/transfers", data=json.dumps({'way': way,
+                                                                   'name': form.name.data,
+                                                                   'description': form.description.data,
+                                                                   'hours': form.hours.data}))
 
 
 if __name__ == '__main__':

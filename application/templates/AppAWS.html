@@ -9,10 +9,9 @@
 </head>
 <body>
     <header>
-        <h1>Chargement des données :</h1>
+        <h1>Projet AWS - Application Front end Web</h1>
     </header>
     <main>
-        <section class="body_section">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -22,6 +21,8 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+        <section class="body_section">
+            <h2>Chargements des données :</h2>
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 <div class="container">
@@ -67,6 +68,22 @@
                         </div>
                         <div class="col">
                             {{ form.submitS3() }}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+        <section class="body_section">
+            <h2>Transfères des données :</h2>
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            {{ form.submitRDStoS3() }}
+                        </div>
+                        <div class="col">
+                            {{ form.submitS3toRDS() }}
                         </div>
                     </div>
                 </div>

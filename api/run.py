@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import boto3
 import json
 import pymysql
@@ -17,9 +17,29 @@ def transfers():
     if record['way'] == "RDS":
         rds = RDS()
         rds.insert_data(record)
-    else:
+    elif record['way'] == "S3":
         s3 = S3()
         s3.upload(record)
+    elif record['way'] == "RDStoS3":
+        rds = RDS()
+        s3 = S3()
+        cursor = rds.rds.cursor()
+        cursor.execute("SELECT * FROM school_subjects")
+        data_from_rds = cursor.fetchall()
+        data_to_s3 = json.loads(json.dumps(
+            {'name': data_from_rds[0]['name'],
+             'description': data_from_rds[0]['description'],
+             'hours': data_from_rds[0]['hours']}
+        ))
+        for row in data_from_rds[1:]:
+            data_to_s3.append(json.loads(json.dumps(
+                {'name': row['name'], 'description': row['description'], 'hours': row['hours']}
+            )))
+        s3.upload(data_to_s3)
+    else:
+        s3 = S3()
+        rds = RDS()
+
     return "Connexion à l'API OK"
 
 
@@ -36,8 +56,8 @@ class RDS:
 
     def insert_data(self, data):
         cur = self.rds.cursor()
-        cur.execute("INSERT INTO school_subjects (name, description, hours) VALUES (%s,%s,%d)",
-                    (data['name'], data['description'], data['hours']))
+        cur.execute("INSERT INTO school_subjects (name, description, hours) VALUES (%s,%s,%s)",
+                    (data['name'], data['description'], [int(data['hours'])]))
         self.rds.commit()
 
 
