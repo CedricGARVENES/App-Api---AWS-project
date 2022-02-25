@@ -23,7 +23,7 @@
         {% endwith %}
         <section class="body_section">
             <h2>Chargements des données :</h2>
-            <form method="POST" action="">
+            <form method="post" action="">
                 {{ form.hidden_tag() }}
                 <div class="container">
                     <div class="row">
@@ -75,15 +75,15 @@
         </section>
         <section class="body_section">
             <h2>Transfères des données :</h2>
-            <form method="POST" action="">
-                {{ form.hidden_tag() }}
+            <form method="post" action="/">
+                {{ form2.hidden_tag() }}
                 <div class="container">
                     <div class="row">
                         <div class="col">
-                            {{ form.submitRDStoS3() }}
+                            {{ form2.submitRDStoS3() }}
                         </div>
                         <div class="col">
-                            {{ form.submitS3toRDS() }}
+                            {{ form2.submitS3toRDS() }}
                         </div>
                     </div>
                 </div>
