@@ -4,7 +4,7 @@ import pymysql
 def run():
     db = pymysql.connect(
         # ToDo
-        host='',  # Point de terminaison
+        host='',
         user='tabernaque',
         password='michmich',
         port=3306
@@ -13,12 +13,16 @@ def run():
 
     sql = '''create database db_aws_project'''
     cursor.execute(sql)
-
     cursor.connection.commit()
+
     sql = '''use db_aws_project'''
     cursor.execute(sql)
 
-    sql = '''CREATE TABLE school_subjects (name varchar(30), description varchar(500), hours integer)'''
+    sql = '''CREATE TABLE school_subjects ( name varchar(30), 
+                                            description varchar(500), 
+                                            hours integer), 
+                                            primary key (name)
+                                            )'''
     cursor.execute(sql)
 
 

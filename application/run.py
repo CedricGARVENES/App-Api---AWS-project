@@ -23,6 +23,23 @@ class TransfersDataForm(FlaskForm):
     submitS3toRDS = SubmitField('Transférer de S3 à RDS')
 
 
+def requests_post_load(form, way):
+    # ToDo
+    response = requests.post(url="http://X:80/transfers", data=json.dumps({'way': way,
+                                                                'name': form.name.data,
+                                                                'description': form.description.data,
+                                                                'hours': form.hours.data}))
+    response_decode = json.loads(response)
+    flash(response_decode['message'], response_decode['category'])
+
+
+def requests_post_transfers(way):
+    # ToDo
+    response = requests.post(url="http://X:80/transfers", data=json.dumps({'way': way}))
+    response_decode = json.loads(response)
+    flash(response_decode['message'], response_decode['category'])
+
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home():
@@ -30,37 +47,18 @@ def home():
     form2 = TransfersDataForm()
 
     if form.validate_on_submit():
-        flash("La matière {name} a été envoyé dans {button}".format(
-            name=form.name.data,
-            button="RDS" if form.submitRDS.data else "S3"
-        ), 'success')
         if form.submitRDS.data:
             requests_post_load(form, "RDS")
-        else:
+        elif form.submitS3.data:
             requests_post_load(form, "S3")
 
     if form2.validate_on_submit():
         if form2.submitRDStoS3.data:
             requests_post_transfers("RDStoS3")
-        else:
+        elif form2.submitS3toRDS.data:
             requests_post_transfers("S3toRDS")
 
-        return redirect(url_for('home'))
-
     return render_template("AppAWS.html", form=form, form2=form2)
-
-
-def requests_post_load(form, way):
-    # ToDo
-    requests.post(url="http://X:80/transfers", data=json.dumps({'way': way,
-                                                                   'name': form.name.data,
-                                                                   'description': form.description.data,
-                                                                   'hours': form.hours.data}))
-
-
-def requests_post_transfers(way):
-    # ToDo
-    requests.post(url="http://X:80/transfers", data=json.dumps({'way': way}))
 
 
 if __name__ == '__main__':
