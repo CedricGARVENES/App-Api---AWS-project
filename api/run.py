@@ -19,8 +19,7 @@ app = Flask(__name__)
 class RDS:
     def __init__(self):
         self.rds = pymysql.connect(
-            # ToDo
-            host='',
+            host=AWS_DB_ENDPOINT,
             db=AWS_DB_NAME,
             user='tabernaque',
             password='michmich',
@@ -35,9 +34,9 @@ class RDS:
                             (data['name'], data['description'], [int(data['hours'])]))
                 self.rds.commit()
             except pymysql.Error as e:
-                return "{'message': '{error}', 'category': 'Danger'}".format(error=e)
+                return '{{"message": "{error}", "category": "danger"}}'.format(error=e)
             else:
-                return "{'message': {message}, 'category': 'Success'}".format(
+                return '{{"message": "{message}", "category": "success"}}'.format(
                     message="La matière {subject}, a bien été ajouté dans la table "
                             "{endpoint} -> {db_name} -> {table_name}".format(
                              subject=data['name'],
@@ -47,8 +46,8 @@ class RDS:
                              )
                 )
         else:
-            return "{'message': 'La matière {subject}, existe déjà dans la table " \
-                   "{endpoint} -> {db_name} -> {table_name}', 'category': 'Warning'}".format(
+            return '{{"message": "La matière {subject}, existe déjà dans la table ' \
+                   '{endpoint} -> {db_name} -> {table_name}", "category": "warning"}}'.format(
                     subject=data['name'],
                     endpoint=AWS_DB_ENDPOINT,
                     db_name=AWS_DB_NAME,
@@ -66,9 +65,9 @@ class S3:
         try:
             self.s3.put_object(Body=json.dumps(data), Bucket=AWS_BUCKET_NAME, Key=AWS_BUCKET_KEY)
         except botocore.exceptions.ClientError as e:
-            return "{'message': '{error}', 'category': 'Danger'}".format(error=e)
+            return '{{"message": "{error}", "category": "danger"}}'.format(error=e)
         else:
-            return "{'message': {message}, 'category': 'Success'}".format(
+            return '{{"message": "{message}", "category": "success"}}'.format(
                 message="La matière {subject}, a bien été ajouté au fichier {key} du S3 {bucket}".format(
                     subject=data[-1]['name'],
                     key=AWS_BUCKET_KEY,
@@ -99,7 +98,12 @@ def rds_to_s3(way):
     else:
         data_to_s3 = json.loads(data_from_s3['Body'].read().decode())
     for row in data_from_rds[1:]:
-        data_to_s3.append({'name': row[0], 'description': row[1], 'hours': row[2]})
+        check_duplicate = False
+        for subject in data_to_s3:
+            if subject['name'] == row[0]:
+                check_duplicate = True
+        if not check_duplicate:
+            data_to_s3.append({'name': row[0], 'description': row[1], 'hours': row[2]})
     response = s3.upload(data_to_s3, way)
     return response
 
@@ -111,9 +115,9 @@ def s3_to_rds():
     data_to_rds = json.loads(data_from_s3['Body'].read().decode())
     for subject in data_to_rds:
         response = rds.insert_data(subject)
-        if json.loads(response)['category'] != 'Success':
+        if json.loads(response)['category'] == 'danger':
             return response
-    return "{'message': {message}, 'category': 'Success'}".format(
+    return '{{"message": "{message}", "category": "success"}}'.format(
         message="Les données du fichier {key} du S3 {bucket} ont bien été ajouté à la base de données RDS "
                 "{endpoint} -> {db_name}".format(key=AWS_BUCKET_KEY,
                                                  bucket=AWS_BUCKET_NAME,
@@ -138,6 +142,14 @@ def transfers():
                             record['way'])
         else:
             data_to_s3 = json.loads(data_from_s3['Body'].read().decode())
+            for subject in data_to_s3:
+                if subject['name'] == record['name']:
+                    return '{{"message": "La matière {subject}, existe déjà dans le fichier ' \
+                           '{key} du S3 {bucket}", "category": "warning"}}'.format(
+                            subject=record['name'],
+                            key=AWS_BUCKET_KEY,
+                            bucket=AWS_BUCKET_NAME
+                            )
             data_to_s3.append({'name': record['name'], 'description': record['description'], 'hours': record['hours']})
             res = s3.upload(data_to_s3, record['way'])
     elif record['way'] == "RDStoS3":

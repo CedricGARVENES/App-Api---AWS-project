@@ -20,7 +20,7 @@ def run():
 
     sql = '''CREATE TABLE school_subjects ( name varchar(30), 
                                             description varchar(500), 
-                                            hours integer), 
+                                            hours integer, 
                                             primary key (name)
                                             )'''
     cursor.execute(sql)

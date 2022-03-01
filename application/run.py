@@ -29,14 +29,14 @@ def requests_post_load(form, way):
                                                                 'name': form.name.data,
                                                                 'description': form.description.data,
                                                                 'hours': form.hours.data}))
-    response_decode = json.loads(response)
+    response_decode = json.loads(response.text)
     flash(response_decode['message'], response_decode['category'])
 
 
 def requests_post_transfers(way):
     # ToDo
     response = requests.post(url="http://X:80/transfers", data=json.dumps({'way': way}))
-    response_decode = json.loads(response)
+    response_decode = json.loads(response.text)
     flash(response_decode['message'], response_decode['category'])
 
 
